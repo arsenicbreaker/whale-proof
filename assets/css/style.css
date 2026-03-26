@@ -3948,13 +3948,13 @@ input[type=search]::-webkit-search-results-decoration {
 .ico_site_footer .shape_top {
   left: 0;
   right: 0;
-  top: -120px;
+  top: -90px;
 }
 .ico_site_footer .shape_top img {
   width: 100%;
 }
 .ico_site_footer .pagelist_block {
-  margin-bottom: 58px;
+  margin-bottom: 30px;
 }
 .ico_site_footer .middle_area {
   margin: 0;
@@ -3976,7 +3976,7 @@ input[type=search]::-webkit-search-results-decoration {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  padding: 50px 40px;
+  padding: 40px 40px;
   text-align: center;
   -webkit-box-align: center;
       -ms-flex-align: center;
@@ -4001,7 +4001,7 @@ input[type=search]::-webkit-search-results-decoration {
   margin-bottom: 30px;
 }
 .ico_site_footer .footer_bottom {
-  padding: 37px 0;
+  padding: 37px 0 50px;
 }
 .ico_site_footer .copyright_text {
   --bs-secondary: #7064E9;

@@ -1,21 +1,68 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { TemplatePage } from './TemplatePage';
-import { appPages, legacyRedirects } from './routes';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  HomePage,
+  BlogPage,
+  BlogDetailsPage,
+  ContactPage,
+  SignInPage,
+  SignUpPage,
+} from "../components/sections/auth";
 
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {appPages.map((page) => (
-          <Route
-            key={page.path}
-            path={page.path}
-            element={<TemplatePage bodyClass={page.bodyClass} html={page.html} title={page.title} />}
-          />
-        ))}
-        {legacyRedirects.map((route) => (
-          <Route key={route.from} path={route.from} element={<Navigate replace to={route.to} />} />
-        ))}
+        {/* Home routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/index" element={<Navigate replace to="/" />} />
+        <Route path="/index_ico" element={<HomePage />} />
+        <Route path="/index_memecoin" element={<HomePage />} />
+        <Route path="/index_pepecoin" element={<HomePage />} />
+
+        {/* Blog routes */}
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog_details" element={<BlogDetailsPage />} />
+
+        {/* Contact route */}
+        <Route path="/contact" element={<ContactPage />} />
+
+        {/* Auth routes */}
+        <Route path="/sign_in" element={<SignInPage />} />
+        <Route path="/sign_up" element={<SignUpPage />} />
+
+        {/* Legacy redirects */}
+        <Route path="/index.html" element={<Navigate replace to="/" />} />
+        <Route
+          path="/index_ico.html"
+          element={<Navigate replace to="/index_ico" />}
+        />
+        <Route
+          path="/index_memecoin.html"
+          element={<Navigate replace to="/index_memecoin" />}
+        />
+        <Route
+          path="/index_pepecoin.html"
+          element={<Navigate replace to="/index_pepecoin" />}
+        />
+        <Route path="/blog.html" element={<Navigate replace to="/blog" />} />
+        <Route
+          path="/blog_details.html"
+          element={<Navigate replace to="/blog_details" />}
+        />
+        <Route
+          path="/contact.html"
+          element={<Navigate replace to="/contact" />}
+        />
+        <Route
+          path="/sign_in.html"
+          element={<Navigate replace to="/sign_in" />}
+        />
+        <Route
+          path="/sign_up.html"
+          element={<Navigate replace to="/sign_up" />}
+        />
+
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </BrowserRouter>
