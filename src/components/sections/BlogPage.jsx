@@ -433,3 +433,5 @@ export const BlogPage = () => {
     </PageLayout>
   );
 };
+
+export default BlogPage;

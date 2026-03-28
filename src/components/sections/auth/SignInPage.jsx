@@ -1,63 +1,92 @@
-import React from 'react';
-import { PageLayout } from '../../layout';
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { AuthShell } from "./AuthShell";
+import { useAuth } from "../../../context/AuthContext";
 
 export const SignInPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+  const [formState, setFormState] = useState({
+    email: "",
+    password: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const destination = location.state?.from?.pathname || "/dashboard";
+  const feedbackMessage = location.state?.message || "";
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setFormState((currentValue) => ({
+      ...currentValue,
+      [name]: value,
+    }));
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      await signIn(formState);
+      navigate(destination, { replace: true });
+    } catch (signInError) {
+      console.error("Sign in failed.", signInError);
+      setError(signInError.message || "Unable to sign in.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <PageLayout 
-      bodyClass="index_ico" 
-      title="Login - WhaleProof"
+    <AuthShell
+      title="Login"
+      description="Sign in to continue your WhaleProof learning path."
+      footerPrompt="Need an account?"
+      footerLinkLabel="Create one"
+      footerLinkTo="/sign_up"
+      showAside={false}
+      compact
     >
-      {/* Register Section - Start */}
-      <section className="register_section section_decoration">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-5 position-relative">
-              <div className="register_form">
-                <h1 className="heading_text text-center">Login to Your Account</h1>
-                <p className="text-center">Enter your details to login.</p>
-                <a className="btn_login_google" href="#!">
-                  <span className="icon">
-                    <img src="assets/icons/icon_google.svg" alt="Google Icon" />
-                  </span>
-                  <span className="label">Continue with Google</span>
-                </a>
-                <div className="divider">
-                  <img src="assets/images/shapes/shape_divider.svg" alt="Divider" />
-                </div>
-                <div className="form-group">
-                  <label className="input_title" htmlFor="input_email">Email<sup>*</sup></label>
-                  <input id="input_email" className="form-control" type="email" name="email" placeholder="alma.lawson@example.com" required="" />
-                </div>
-                <div className="form-group">
-                  <label className="input_title" htmlFor="input_pass">Password<sup>*</sup></label>
-                  <input id="input_pass" className="form-control" type="password" name="password" placeholder="***********" required="" />
-                </div>
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="form-check">
-                      <input className="form-check-input" type="checkbox" id="checkbox_remember_me" />
-                      <label className="form-check-label" htmlFor="checkbox_remember_me">
-                        Remember Me
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="forget_pass text-md-end mb-0">Forgot password? <a href="#!"><u>Reset</u></a></p>
-                  </div>
-                </div>
-                <button className="btn" type="submit">
-                  <span className="btn_label">Login</span>
-                  <span className="btn_icon"><i className="fa-regular fa-arrow-up-right"></i></span>
-                </button>
-              </div>
-              <div className="decoration_item shape_flower">
-                <img src="assets/images/shapes/shape_flower_1.svg" alt="Flower" />
-              </div>
-            </div>
-          </div>
+      {feedbackMessage ? <div className="wp-alert">{feedbackMessage}</div> : null}
+      {error ? <div className="wp-alert wp-alert--error">{error}</div> : null}
+
+      <form className="wp-form" onSubmit={handleSubmit}>
+        <label className="wp-field">
+          <span>Email</span>
+          <input
+            name="email"
+            type="email"
+            value={formState.email}
+            onChange={handleChange}
+            placeholder="trader@whaleproof.io"
+            autoComplete="email"
+            required
+          />
+        </label>
+
+        <label className="wp-field">
+          <span>Password</span>
+          <input
+            name="password"
+            type="password"
+            value={formState.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+
+        <div className="wp-form__footer">
+          <button className="wp-button wp-button--full" type="submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign in"}
+          </button>
         </div>
-      </section>
-      {/* Register Section - End */}
-    </PageLayout>
+      </form>
+    </AuthShell>
   );
 };

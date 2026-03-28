@@ -1,6 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function HeroSection() {
+  const { user } = useAuth();
+
   return (
     <section
       className="ico_hero_section section_decoration text-center"
@@ -20,7 +24,7 @@ export default function HeroSection() {
           data-aos-delay="100"
         >
           <li>
-            <a className="ico_creative_btn" href="#!">
+            <Link className="ico_creative_btn" to={user ? "/dashboard" : "/sign_up"}>
               <span className="btn_wrapper">
                 <span className="btn_icon_left">
                   <small className="dot_top"></small>
@@ -50,10 +54,10 @@ export default function HeroSection() {
                   </svg>
                 </span>
               </span>
-            </a>
+            </Link>
           </li>
           <li>
-            <a className="ico_creative_btn" href="#!">
+            <a className="ico_creative_btn" href="/#id_ico_service_section">
               <span className="btn_wrapper">
                 <span className="btn_icon_left">
                   <small className="dot_top"></small>

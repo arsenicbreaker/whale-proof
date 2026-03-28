@@ -7,6 +7,9 @@ import {
   SignInPage,
   SignUpPage,
 } from "../components/sections/auth";
+import { DashboardPage } from "../components/sections/dashboard";
+import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import { PublicOnlyRoute } from "../components/auth/PublicOnlyRoute";
 
 export function App() {
   return (
@@ -27,8 +30,16 @@ export function App() {
         <Route path="/contact" element={<ContactPage />} />
 
         {/* Auth routes */}
-        <Route path="/sign_in" element={<SignInPage />} />
-        <Route path="/sign_up" element={<SignUpPage />} />
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/sign_in" element={<SignInPage />} />
+          <Route path="/sign_up" element={<SignUpPage />} />
+        </Route>
+
+        {/* Protected learning routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/modules" element={<DashboardPage />} />
+        </Route>
 
         {/* Legacy redirects */}
         <Route path="/index.html" element={<Navigate replace to="/" />} />

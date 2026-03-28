@@ -13,7 +13,14 @@ import { refreshTemplateScripts } from '../../app/externalScripts';
  * @param {string} props.title - Page title
  * @param {boolean} props.showFooter - Whether to show footer (default: false)
  */
-export const PageLayout = ({ children, bodyClass = 'index_ico', title = 'WhaleProof', showFooter = false }) => {
+export const PageLayout = ({
+  children,
+  bodyClass = 'index_ico',
+  title = 'WhaleProof',
+  showFooter = false,
+  templateScripts = true,
+  showHeader = true,
+}) => {
   const location = useLocation();
 
   useEffect(() => {
@@ -21,6 +28,11 @@ export const PageLayout = ({ children, bodyClass = 'index_ico', title = 'WhalePr
     document.title = title;
 
     const syncTemplateBehavior = async () => {
+      if (!templateScripts) {
+        window.scrollTo(0, 0);
+        return;
+      }
+
       await refreshTemplateScripts();
 
       if (location.hash) {
@@ -36,27 +48,31 @@ export const PageLayout = ({ children, bodyClass = 'index_ico', title = 'WhalePr
     syncTemplateBehavior().catch((error) => {
       console.error('Page script refresh failed.', error);
     });
-  }, [bodyClass, location.hash, location.pathname, title]);
+  }, [bodyClass, location.hash, location.pathname, templateScripts, title]);
 
   return (
     <div className="page_wrapper">
       {/* Back To Top */}
-      <div className="backtotop">
-        <a href="#" className="scroll">
-          <i className="fa-solid fa-arrow-up"></i>
-        </a>
-      </div>
+      {templateScripts ? (
+        <div className="backtotop">
+          <a href="#" className="scroll">
+            <i className="fa-solid fa-arrow-up"></i>
+          </a>
+        </div>
+      ) : null}
 
       {/* Preloader */}
-      <div id="preloader">
-        <div className="line-1"></div>
-        <div className="line-2"></div>
-        <div className="line-3"></div>
-        <div className="line-4"></div>
-      </div>
+      {templateScripts ? (
+        <div id="preloader">
+          <div className="line-1"></div>
+          <div className="line-2"></div>
+          <div className="line-3"></div>
+          <div className="line-4"></div>
+        </div>
+      ) : null}
 
       {/* Header */}
-      <Header />
+      {showHeader ? <Header /> : null}
 
       {/* Main Content */}
       <main className="page_content">
