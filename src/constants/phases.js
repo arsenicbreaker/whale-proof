@@ -3,6 +3,7 @@ export const LEARNING_PHASES = [
     id: 1,
     name: "The Armor",
     focus: "Risk Management",
+    prerequisiteIds: [],
     description:
       "Build capital protection rules, position sizing discipline, and loss containment habits.",
   },
@@ -10,6 +11,7 @@ export const LEARNING_PHASES = [
     id: 2,
     name: "The Radar",
     focus: "Market Dynamics",
+    prerequisiteIds: [1],
     description:
       "Read liquidity, supply shifts, and narrative cycles before reacting to price noise.",
   },
@@ -17,6 +19,7 @@ export const LEARNING_PHASES = [
     id: 3,
     name: "The Shield",
     focus: "Trading Psychology",
+    prerequisiteIds: [2],
     description:
       "Track emotional triggers, impulse patterns, and self-talk before and after trades.",
   },
@@ -24,6 +27,7 @@ export const LEARNING_PHASES = [
     id: 4,
     name: "The Verdict",
     focus: "Final Simulation",
+    prerequisiteIds: [3],
     description:
       "Stress-test every lesson in a final scenario that simulates real decision pressure.",
   },

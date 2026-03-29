@@ -2,24 +2,45 @@ import { useEffect, useMemo, useState } from "react";
 import { PageLayout } from "../../layout";
 import { useAuth } from "../../../context/AuthContext";
 import { LEARNING_PHASES } from "../../../constants/phases";
-import { createJournalEntry, fetchJournals } from "../../../services/journalService";
+import { fetchJournals } from "../../../services/journalService";
 import { fetchUserProgress, updatePhaseCompletion } from "../../../services/progressService";
 import { PhaseProgressBoard } from "./PhaseProgressBoard";
-import { PsychologyJournal } from "./PsychologyJournal";
+import { PhaseMissionPanel } from "./PhaseMissionPanel";
 
-const defaultJournalState = {
-  emotionTag: "Calm",
-  content: "",
+const defaultRiskTrainingState = {
+  capital: "",
+  riskPercent: "",
+  entryPrice: "",
+  stopLoss: "",
+};
+
+const defaultRadarQuizState = {
+  selectedOptionId: "",
+  attempts: 0,
+};
+
+const defaultPsychologyQuizState = {
+  answers: {},
+};
+
+const defaultFinalSimulationState = {
+  decision: "",
+  riskPercent: "",
+  mindset: "",
 };
 
 export function DashboardPage() {
   const { user, profile, refreshProfile } = useAuth();
   const [progress, setProgress] = useState([]);
   const [journals, setJournals] = useState([]);
-  const [journalForm, setJournalForm] = useState(defaultJournalState);
+  const [riskTrainingState, setRiskTrainingState] = useState(defaultRiskTrainingState);
+  const [radarQuizState, setRadarQuizState] = useState(defaultRadarQuizState);
+  const [psychologyQuizState, setPsychologyQuizState] = useState(defaultPsychologyQuizState);
+  const [finalSimulationState, setFinalSimulationState] = useState(defaultFinalSimulationState);
+  const [selectedPhaseId, setSelectedPhaseId] = useState(null);
+  const [activeMissionTab, setActiveMissionTab] = useState("briefing");
   const [loading, setLoading] = useState(true);
   const [phaseActionLoading, setPhaseActionLoading] = useState("");
-  const [journalSubmitting, setJournalSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -71,6 +92,69 @@ export function DashboardPage() {
     [progress],
   );
 
+  const phaseById = useMemo(
+    () => new Map(LEARNING_PHASES.map((phase) => [phase.id, phase])),
+    [],
+  );
+
+  const phaseStates = useMemo(
+    () =>
+      LEARNING_PHASES.map((phase) => {
+        const isCompleted = Boolean(progressMap[phase.name]?.is_completed);
+        const firstLockedPrerequisiteId = (phase.prerequisiteIds ?? []).find((prerequisiteId) => {
+          const prerequisitePhase = phaseById.get(prerequisiteId);
+          return prerequisitePhase
+            ? !Boolean(progressMap[prerequisitePhase.name]?.is_completed)
+            : false;
+        });
+        const firstLockedPrerequisite = firstLockedPrerequisiteId
+          ? phaseById.get(firstLockedPrerequisiteId)
+          : null;
+        const isUnlocked = !firstLockedPrerequisite;
+        const isImplemented = phase.id <= 4;
+
+        let statusLabel = "Available";
+        let statusTone = "available";
+        let helperText = "Mission ready. Enter the workspace to begin training.";
+        let actionLabel = "Open Mission";
+
+        if (isCompleted) {
+          statusLabel = "Completed";
+          statusTone = "done";
+          helperText = "Mission cleared. Review the materials or continue to the next phase.";
+          actionLabel = "Review Mission";
+        } else if (!isUnlocked && firstLockedPrerequisite) {
+          statusLabel = "Locked";
+          statusTone = "locked";
+          helperText = `Complete Phase ${firstLockedPrerequisite.id}: ${firstLockedPrerequisite.name} to unlock this phase.`;
+          actionLabel = "Locked";
+        } else if (phase.id === 2) {
+          helperText = "Mission ready. Filter noise from clean structure before acting.";
+        } else if (phase.id === 3) {
+          helperText = "Mission ready. Train against FOMO, revenge, and rule-breaking impulses.";
+        } else if (phase.id === 4) {
+          helperText = "Mission ready. Final simulation combines risk, structure, and psychology.";
+        } else if (!isImplemented) {
+          helperText = "Mission path unlocked. Interactive deployment is queued next.";
+        }
+
+        return {
+          phase,
+          isCompleted,
+          isUnlocked,
+          isLocked: !isUnlocked,
+          isImplemented,
+          statusLabel,
+          statusTone,
+          helperText,
+          actionLabel,
+        };
+      }),
+    [phaseById, progressMap],
+  );
+
+  const selectedPhaseState = phaseStates.find((phaseState) => phaseState.phase.id === selectedPhaseId);
+
   const completedCount = progress.filter((row) => row.is_completed).length;
   const completionPercent = Math.round(
     (completedCount / LEARNING_PHASES.length) * 100,
@@ -87,6 +171,7 @@ export function DashboardPage() {
     try {
       const nextProgress = await updatePhaseCompletion(user.id, phaseName, true);
       setProgress(nextProgress);
+      setActiveMissionTab("verification");
       await refreshProfile();
     } catch (updateError) {
       console.error("Failed to update phase progress.", updateError);
@@ -96,39 +181,58 @@ export function DashboardPage() {
     }
   }
 
-  function handleJournalChange(event) {
+  function handleOpenPhase(phaseId) {
+    const phaseState = phaseStates.find((item) => item.phase.id === phaseId);
+
+    if (!phaseState || phaseState.isLocked) {
+      return;
+    }
+
+    setSelectedPhaseId(phaseId);
+    setActiveMissionTab("briefing");
+  }
+
+  function handleClosePhase() {
+    setSelectedPhaseId(null);
+  }
+
+  function handleRiskTrainingChange(event) {
     const { name, value } = event.target;
-    setJournalForm((currentValue) => ({
+    setRiskTrainingState((currentValue) => ({
       ...currentValue,
       [name]: value,
     }));
   }
 
-  async function handleJournalSubmit(event) {
-    event.preventDefault();
+  function handleSelectRadarOption(optionId) {
+    setRadarQuizState((currentValue) => ({
+      selectedOptionId: optionId,
+      attempts: currentValue.attempts + 1,
+    }));
+  }
 
-    if (!user) {
-      return;
-    }
+  function handleSelectPsychologyAnswer(questionId, optionId) {
+    setPsychologyQuizState((currentValue) => ({
+      answers: {
+        ...currentValue.answers,
+        [questionId]: optionId,
+      },
+    }));
+  }
 
-    setJournalSubmitting(true);
-    setError("");
+  function handleResetPsychologyQuiz() {
+    setPsychologyQuizState(defaultPsychologyQuizState);
+  }
 
-    try {
-      const entry = await createJournalEntry({
-        userId: user.id,
-        content: journalForm.content.trim(),
-        emotionTag: journalForm.emotionTag,
-      });
+  function handleFinalSimulationChange(name, value) {
+    setFinalSimulationState((currentValue) => ({
+      ...currentValue,
+      [name]: value,
+    }));
+  }
 
-      setJournals((currentEntries) => [entry, ...currentEntries]);
-      setJournalForm(defaultJournalState);
-    } catch (journalError) {
-      console.error("Failed to save journal entry.", journalError);
-      setError(journalError.message || "Unable to save your journal entry.");
-    } finally {
-      setJournalSubmitting(false);
-    }
+  function handleResetFinalSimulation() {
+    setFinalSimulationState(defaultFinalSimulationState);
   }
 
   return (
@@ -169,6 +273,11 @@ export function DashboardPage() {
             </div>
 
             {error ? <div className="wp-alert wp-alert--error">{error}</div> : null}
+            {!loading && completedCount === LEARNING_PHASES.length ? (
+              <div className="wp-alert wp-alert--success">
+                All WhaleProof phases are complete. Your program record is fully synced.
+              </div>
+            ) : null}
 
             {loading ? (
               <div className="wp-panel">
@@ -177,17 +286,32 @@ export function DashboardPage() {
             ) : (
               <>
                 <PhaseProgressBoard
-                  progressMap={progressMap}
-                  phaseActionLoading={phaseActionLoading}
-                  onCompletePhase={handleCompletePhase}
+                  phaseStates={phaseStates}
+                  activePhaseId={selectedPhaseId}
+                  onOpenPhase={handleOpenPhase}
                 />
-                <PsychologyJournal
-                  entries={journals}
-                  formState={journalForm}
-                  onChange={handleJournalChange}
-                  onSubmit={handleJournalSubmit}
-                  isSubmitting={journalSubmitting}
-                />
+                {selectedPhaseState ? (
+                  <PhaseMissionPanel
+                    phase={selectedPhaseState.phase}
+                    phaseState={selectedPhaseState}
+                    activeTab={activeMissionTab}
+                    onChangeTab={setActiveMissionTab}
+                    onClose={handleClosePhase}
+                    trainingState={riskTrainingState}
+                    onTrainingChange={handleRiskTrainingChange}
+                    radarQuizState={radarQuizState}
+                    onSelectRadarOption={handleSelectRadarOption}
+                    psychologyQuizState={psychologyQuizState}
+                    onSelectPsychologyAnswer={handleSelectPsychologyAnswer}
+                    onResetPsychologyQuiz={handleResetPsychologyQuiz}
+                    finalSimulationState={finalSimulationState}
+                    onFinalSimulationChange={handleFinalSimulationChange}
+                    onResetFinalSimulation={handleResetFinalSimulation}
+                    journalCount={journals.length}
+                    onCompletePhase={() => handleCompletePhase(selectedPhaseState.phase.name)}
+                    isCompletionPending={phaseActionLoading === selectedPhaseState.phase.name}
+                  />
+                ) : null}
               </>
             )}
           </div>

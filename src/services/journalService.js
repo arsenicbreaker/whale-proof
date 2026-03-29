@@ -1,10 +1,17 @@
 import { assertSupabaseConfigured } from "../lib/supabaseClient";
 
+function normalizeJournalEntry(row) {
+  return {
+    ...row,
+    note: row?.note ?? row?.content ?? "",
+  };
+}
+
 export async function fetchJournals(userId) {
   const supabase = assertSupabaseConfigured();
   const { data, error } = await supabase
     .from("journals")
-    .select("id, user_id, content, emotion_tag, created_at")
+    .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -12,24 +19,38 @@ export async function fetchJournals(userId) {
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? []).map(normalizeJournalEntry);
 }
 
-export async function createJournalEntry({ userId, content, emotionTag }) {
+export async function createJournalEntry({ userId, note, emotionTag }) {
   const supabase = assertSupabaseConfigured();
-  const { data, error } = await supabase
+  const preferredInsert = await supabase
     .from("journals")
     .insert({
       user_id: userId,
-      content,
+      note,
       emotion_tag: emotionTag,
     })
-    .select("id, user_id, content, emotion_tag, created_at")
+    .select("*")
     .single();
 
-  if (error) {
-    throw error;
+  if (!preferredInsert.error) {
+    return normalizeJournalEntry(preferredInsert.data);
   }
 
-  return data;
+  const fallbackInsert = await supabase
+    .from("journals")
+    .insert({
+      user_id: userId,
+      content: note,
+      emotion_tag: emotionTag,
+    })
+    .select("*")
+    .single();
+
+  if (fallbackInsert.error) {
+    throw fallbackInsert.error ?? preferredInsert.error;
+  }
+
+  return normalizeJournalEntry(fallbackInsert.data);
 }

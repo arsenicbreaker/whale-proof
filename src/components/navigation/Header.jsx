@@ -27,11 +27,24 @@ export const Header = ({
     [profile?.username, user?.email],
   );
 
-  const isDashboardView =
-    Boolean(user) &&
-    (location.pathname === '/dashboard' || location.pathname === '/modules');
-
-  const menuItems = navigationMenu;
+  const menuItems = user
+    ? [
+        {
+          id: 'dashboard',
+          label: 'Dashboard',
+          href: '/dashboard',
+          dataText: 'Dashboard',
+          active: location.pathname === '/dashboard' || location.pathname === '/modules',
+        },
+        {
+          id: 'journal',
+          label: 'Journal',
+          href: '/journal',
+          dataText: 'Journal',
+          active: location.pathname === '/journal',
+        },
+      ]
+    : navigationMenu;
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -61,23 +74,7 @@ export const Header = ({
           iconClassName: 'fa-solid fa-arrow-up-right-from-square',
         },
       ]
-    : isDashboardView
-    ? [
-        {
-          id: 'logout',
-          label: isSigningOut ? '...' : 'Logout',
-          iconClassName: 'fa-solid fa-right-from-bracket',
-          onClick: handleSignOut,
-          disabled: isSigningOut,
-        },
-      ]
     : [
-        {
-          id: 'dashboard',
-          label: 'Dashboard',
-          to: '/dashboard',
-          iconClassName: 'fa-solid fa-shield-halved',
-        },
         {
           id: 'logout',
           label: isSigningOut ? '...' : 'Logout',
@@ -87,17 +84,17 @@ export const Header = ({
         },
       ];
 
-  const headerClassName = isDashboardView
+  const headerClassName = user
     ? 'site_header wp-site-header--dashboard'
     : 'site_header';
-  const logoColumnClassName = isDashboardView
-    ? 'col-lg-4 col-7 d-flex align-items-center'
+  const logoColumnClassName = user
+    ? 'col-lg-3 col-7 d-flex align-items-center'
     : 'col-lg-3 col-5 d-flex align-items-center';
-  const navColumnClassName = isDashboardView
-    ? 'col-lg-3 d-none d-lg-flex justify-content-center'
+  const navColumnClassName = user
+    ? 'col-lg-5 col-2'
     : 'col-lg-6 col-2';
-  const actionsColumnClassName = isDashboardView
-    ? 'col-lg-5 col-5'
+  const actionsColumnClassName = user
+    ? 'col-lg-4 col-5'
     : 'col-lg-3 col-5';
 
   return (
@@ -116,38 +113,29 @@ export const Header = ({
 
             {/* Navigation Menu */}
             <div className={navColumnClassName}>
-              {isDashboardView ? (
-                <div className="wp-dashboard-header__nav" aria-label="Current section">
-                  <span className="wp-dashboard-header__eyebrow">Workspace</span>
-                  <span className="wp-dashboard-header__title">Dashboard</span>
-                </div>
-              ) : (
-                <Navbar menuItems={menuItems} />
-              )}
+              <Navbar menuItems={menuItems} />
             </div>
 
             {/* Action Buttons */}
             <div className={actionsColumnClassName}>
               <ul
                 className={`btns_group unordered_list p-0 justify-content-end wp-header-user${
-                  isDashboardView ? ' wp-header-user--dashboard' : ''
+                  user ? ' wp-header-user--dashboard' : ''
                 }`}
               >
                 {/* Mobile Menu Toggle */}
-                {!isDashboardView ? (
-                  <li className="d-lg-none">
-                    <button 
-                      className="mobile_menu_btn" 
-                      type="button" 
-                      data-bs-toggle="collapse" 
-                      data-bs-target="#main_menu_dropdown" 
-                      aria-expanded="false" 
-                      aria-label="Toggle navigation"
-                    >
-                      <i className="far fa-bars"></i>
-                    </button>
-                  </li>
-                ) : null}
+                <li className="d-lg-none">
+                  <button 
+                    className="mobile_menu_btn" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#main_menu_dropdown" 
+                    aria-expanded="false" 
+                    aria-label="Toggle navigation"
+                  >
+                    <i className="far fa-bars"></i>
+                  </button>
+                </li>
                 
                 {loading ? null : (
                   <>

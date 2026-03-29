@@ -1,9 +1,7 @@
-import { LEARNING_PHASES } from "../../../constants/phases";
-
 export function PhaseProgressBoard({
-  progressMap,
-  phaseActionLoading,
-  onCompletePhase,
+  phaseStates,
+  activePhaseId,
+  onOpenPhase,
 }) {
   return (
     <section className="wp-panel">
@@ -19,38 +17,33 @@ export function PhaseProgressBoard({
       </div>
 
       <div className="wp-phase-grid">
-        {LEARNING_PHASES.map((phase) => {
-          const isCompleted = Boolean(progressMap[phase.name]?.is_completed);
-          const isSubmitting = phaseActionLoading === phase.name;
-
+        {phaseStates.map((phaseState) => {
+          const { phase } = phaseState;
+          const isActive = phase.id === activePhaseId;
           return (
-            <article className="wp-phase-card" key={phase.id}>
+            <article
+              className={`wp-phase-card${isActive ? " wp-phase-card--active" : ""}${
+                phaseState.isLocked ? " wp-phase-card--locked" : ""
+              }`}
+              key={phase.id}
+            >
               <div className="wp-phase-card__meta">
                 <span className="wp-phase-card__badge">Phase {phase.id}</span>
-                <span
-                  className={
-                    isCompleted
-                      ? "wp-phase-card__status wp-phase-card__status--done"
-                      : "wp-phase-card__status"
-                  }
-                >
-                  {isCompleted ? "Completed" : "In progress"}
+                <span className={`wp-phase-card__status wp-phase-card__status--${phaseState.statusTone}`}>
+                  {phaseState.statusLabel}
                 </span>
               </div>
               <h3>{phase.name}</h3>
               <p className="wp-phase-card__focus">{phase.focus}</p>
               <p className="wp-phase-card__description">{phase.description}</p>
+              <p className="wp-phase-card__helper">{phaseState.helperText}</p>
               <button
-                className="wp-button"
+                className={phaseState.isLocked ? "wp-button--secondary" : "wp-button"}
                 type="button"
-                onClick={() => onCompletePhase(phase.name)}
-                disabled={isCompleted || isSubmitting}
+                onClick={() => onOpenPhase(phase.id)}
+                disabled={phaseState.isLocked}
               >
-                {isCompleted
-                  ? "Completed"
-                  : isSubmitting
-                    ? "Saving..."
-                    : "Mark phase complete"}
+                {phaseState.actionLabel}
               </button>
             </article>
           );

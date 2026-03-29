@@ -7,7 +7,7 @@ import {
   SignInPage,
   SignUpPage,
 } from "../components/sections/auth";
-import { DashboardPage } from "../components/sections/dashboard";
+import { DashboardPage, JournalPage } from "../components/sections/dashboard";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "../components/auth/PublicOnlyRoute";
 
@@ -39,6 +39,7 @@ export function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/modules" element={<DashboardPage />} />
+          <Route path="/journal" element={<JournalPage />} />
         </Route>
 
         {/* Legacy redirects */}
