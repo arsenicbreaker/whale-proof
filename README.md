@@ -1,4 +1,4 @@
-# Coinpay SaaS Frontend
+# WhaleProof
 
 This project converts the original Coinpay static template into a React + Vite single-page frontend with clean client-side routes.
 
